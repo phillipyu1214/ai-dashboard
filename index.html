@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Investment Dashboard - Goldman Sachs Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Goldman Sachs Blue + Cream White */
+            --primary: #0033A1;
+            --primary-dark: #001D5F;
+            --primary-light: #1E4FA3;
+            --accent: #4A90E2;
+            --bg-primary: #F5F5F0;
+            --bg-secondary: #FFFFFF;
+            --bg-card: #FAFAF8;
+            --bg-hover: #ECECE7;
+            --border-color: #D5D5D0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #606060;
+            --green: #0d9488;
+            --red: #dc2626;
+            --yellow: #d97706;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            padding: 25px 0;
+            box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 55px;
+            height: 55px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .title-section h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 0.9em;
+            color: rgba(255,255,255,0.85);
+        }
+
+        .header-meta {
+            text-align: right;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .last-update {
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .refresh-btn {
+            background: #fff;
+            color: var(--primary);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Main Tabs */
+        .main-tabs {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            gap: 0;
+        }
+
+        .main-tab {
+            flex: 1;
+            padding: 18px 30px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .main-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.03);
+        }
+
+        .main-tab.active {
+            color: #fff;
+            background: var(--primary);
+            border-bottom-color: var(--accent);
+        }
+
+        .main-tab-content {
+            display: none;
+            padding: 40px 0;
+        }
+
+        .main-tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Headers */
+        .section-header {
+            margin: 30px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-subtitle {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Market Indices Grid */
+        .indices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .index-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 18px;
+            transition: all 0.3s;
+        }
+
+        .index-card:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .index-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .index-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .index-change {
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .index-change.positive { color: var(--green); }
+        .index-change.negative { color: var(--red); }
+
+        /* Stock Full Card */
+        .stock-full-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+        }
+
+        .stock-full-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 32px rgba(217, 119, 6, 0.2);
+        }
+
+        .stock-card-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-info h3 {
+            font-size: 1.8em;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .stock-company {
+            font-size: 0.95em;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .stock-price-section {
+            text-align: right;
+        }
+
+        .stock-price {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stock-change-badge {
+            font-size: 0.95em;
+            margin-top: 5px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .stock-change-badge.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green);
+        }
+
+        .stock-change-badge.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--red);
+        }
+
+        .stock-card-body {
+            padding: 25px;
+        }
+
+        /* Financial Metrics */
+        .financial-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .metric-item-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-item-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .metric-item-trend {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+        }
+
+        /* Technical Indicators */
+        .technical-indicators {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tech-indicator {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .tech-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .tech-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .tech-signal {
+            font-size: 0.7em;
+            padding: 4px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .tech-signal.bullish {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green);
+        }
+
+        .tech-signal.bearish {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--red);
+        }
+
+        .tech-signal.neutral {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+        }
+
+        /* Executive Summary */
+        .executive-summary {
+            background: rgba(217, 119, 6, 0.08);
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-item {
+            margin-bottom: 12px;
+            padding-left: 18px;
+            position: relative;
+            line-height: 1.8;
+            font-size: 0.95em;
+        }
+
+        .summary-item::before {
+            content: '▪';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .summary-label {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .summary-text {
+            color: var(--text-secondary);
+        }
+
+        /* TradingView Container */
+        .tradingview-container {
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 500px;
+            background: var(--bg-secondary);
+        }
+
+        /* Pick Card (for Tab 2) */
+        .pick-rank {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: #fff;
+            color: var(--primary);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .pick-category {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .pick-days {
+            background: var(--accent);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+            margin-left: 10px;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            padding: 30px 0;
+            margin-top: 60px;
+            border-top: 3px solid var(--primary);
+            text-align: center;
+        }
+
+        .disclaimer {
+            background: rgba(217, 119, 6, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .financial-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .main-tab {
+                font-size: 0.85em;
+                padding: 14px 10px;
+            }
+
+            .indices-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .financial-metrics,
+            .technical-indicators {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">AI</div>
+                    <div class="title-section">
+                        <h1>AI Investment Research</h1>
+                        <div class="subtitle">Quantitative Analysis & Market Intelligence</div>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div class="last-update" id="lastUpdate">Last Updated: --</div>
+                    <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Tabs -->
+    <div class="main-tabs">
+        <button class="main-tab active" onclick="switchMainTab(0)">
+            📊 AI Momentum Tracker
+        </button>
+        <button class="main-tab" onclick="switchMainTab(1)">
+            💎 Unconventional Picks
+        </button>
+        <button class="main-tab" onclick="switchMainTab(2)">
+            📈 Deep Analysis
+        </button>
+    </div>
+
+    <div class="container">
+        <!-- Tab 1: AI Momentum Tracker -->
+        <div class="main-tab-content active" id="tab-0">
+            <!-- Market Indices -->
+            <div class="section-header">
+                <div class="section-title">Major Market Indices</div>
+                <div class="section-subtitle">实时市场指标</div>
+            </div>
+            <div class="indices-grid" id="marketIndices"></div>
+
+            <!-- AI Metrics -->
+            <div class="section-header">
+                <div class="section-title">AI Market Metrics</div>
+                <div class="section-subtitle">行业专属指标</div>
+            </div>
+            <div class="indices-grid" id="aiMetrics"></div>
+
+            <!-- Core AI Stocks -->
+            <div class="section-header">
+                <div class="section-title">Core AI Stocks Analysis</div>
+                <div class="section-subtitle">核心AI股票深度分析</div>
+            </div>
+            <div id="coreStocksContainer"></div>
+        </div>
+
+        <!-- Tab 2: Unconventional Picks -->
+        <div class="main-tab-content" id="tab-1">
+            <div id="picksContainer"></div>
+        </div>
+
+        <!-- Tab 3: Deep Analysis -->
+        <div class="main-tab-content" id="tab-2">
+            <div id="analysisContainer"></div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            <strong>DISCLAIMER:</strong> This analysis is for informational purposes only and does not constitute investment advice. 
+            Past performance does not guarantee future results. AI sector investments carry significant risk and volatility. 
+            Please conduct your own due diligence and consult with a qualified financial advisor before making investment decisions.
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <p style="color: var(--text-secondary); font-size: 0.9em;">
+                AI Investment Research © 2024 | Powered by TradingView
+            </p>
+        </div>
+    </div>
+
+    <!-- TradingView Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+    <script>
+        const LOCAL_STORAGE_KEY = 'ai_dashboard_data';
+
+        // 核心AI股票配置
+        const coreStocks = [
+            {
+                ticker: 'NVDA',
+                name: 'NVIDIA Corporation',
+                exchange: 'NASDAQ',
+                aiRevenue: 78,
+                rdRate: 24.5,
+                cloudGrowth: 206,
+                summary: {
+                    business: 'AI芯片绝对龙头，H100/H200 GPU占据AI训练市场80%+份额，CUDA生态系统形成强大护城河，数据中心业务营收占比超70%。',
+                    valuation: '当前P/E 65x看似高估，但考虑到数据中心业务217% YoY增长和AI需求持续旺盛，PEG约2.2，相对增速合理。',
+                    technical: 'RSI 68偏强但未超买，MACD金叉强势，价格远超MA50（+15%），技术面强劲，短期支撑$800。',
+                    outlook: 'Blackwell架构GPU（B100/B200）2024 H2量产，AI推理市场爆发带来第二增长曲线，2024-2026年数据中心业务CAGR预计50%+。'
+                }
+            },
+            {
+                ticker: 'MSFT',
+                name: 'Microsoft Corporation',
+                exchange: 'NASDAQ',
+                aiRevenue: 42,
+                rdRate: 13.2,
+                cloudGrowth: 31,
+                summary: {
+                    business: 'OpenAI最大投资方和战略合作伙伴，Azure AI服务快速渗透企业市场，Copilot产品线覆盖Office/Windows/GitHub全生态。',
+                    valuation: 'P/E 35x略高于历史均值，但Azure AI驱动云业务加速（+31% YoY），AI货币化路径清晰，估值合理偏贵。',
+                    technical: 'RSI 62中性偏强，MACD金叉，价格位于MA50上方+4.5%，趋势健康，支撑位$400关键。',
+                    outlook: 'Copilot订阅ARR预计2025年突破$10B，Azure AI客户数超60%，AI战略转型成效显著，云+AI双轮驱动长期增长。'
+                }
+            },
+            {
+                ticker: 'GOOGL',
+                name: 'Alphabet Inc.',
+                exchange: 'NASDAQ',
+                aiRevenue: 35,
+                rdRate: 15.8,
+                cloudGrowth: 28,
+                summary: {
+                    business: 'Gemini大模型技术领先，TPU自研芯片降低AI成本，搜索业务AI化（SGE）和Cloud AI服务双管齐下，DeepMind研究实力强劲。',
+                    valuation: 'P/E 24x相对科技股偏低，云业务加速+搜索AI化提升效率，估值具有吸引力，安全边际较高。',
+                    technical: 'RSI 55中性，MACD即将金叉，价格接近MA50，技术面中性偏多，突破$145将打开上涨空间。',
+                    outlook: 'Gemini Ultra对标GPT-4成功，搜索AI化（AI Overview）提升用户体验，Cloud AI营收+28%加速，AI研发优势转化为商业价值。'
+                }
+            },
+            {
+                ticker: 'META',
+                name: 'Meta Platforms Inc.',
+                exchange: 'NASDAQ',
+                aiRevenue: 22,
+                rdRate: 18.9,
+                cloudGrowth: 0,
+                summary: {
+                    business: 'Llama开源模型领导者，AI驱动广告精准投放和内容推荐，Reality Labs押注AI+VR/AR，2024年CapEx $35-40B大部分投向AI基础设施。',
+                    valuation: 'P/E 28x合理，广告业务AI优化带来ROI提升，开源策略降低AI成本，估值相对增长合理。',
+                    technical: 'RSI 70超买边缘，MACD金叉但动能减弱，价格高于MA50（+8%），短期技术面过热，需警惕回调。',
+                    outlook: 'AI广告优化直接提升ROAS，Llama 3开源生态扩大AI影响力，Reality Labs AI应用落地，AI投资2025年开始贡献利润。'
+                }
+            },
+            {
+                ticker: 'AMZN',
+                name: 'Amazon.com Inc.',
+                exchange: 'NASDAQ',
+                aiRevenue: 15,
+                rdRate: 12.7,
+                cloudGrowth: 19,
+                summary: {
+                    business: 'AWS提供全栈AI服务（Bedrock/SageMaker），自研Trainium/Inferentia芯片降低AI成本，电商AI推荐和Alexa AI助手全场景应用。',
+                    valuation: 'P/E 48x偏高主要因零售低利润率拖累，AWS单独估值合理，AI驱动云业务重加速，长期价值被低估。',
+                    technical: 'RSI 58中性，MACD平稳，价格位于MA50附近，技术面中性，等待明确方向突破。',
+                    outlook: 'AWS AI服务营收+19%，Bedrock客户快速增长，自研芯片降低30%成本，电商AI推荐提升转化率，云+零售AI化协同。'
+                }
+            },
+            {
+                ticker: 'AMD',
+                name: 'Advanced Micro Devices',
+                exchange: 'NASDAQ',
+                aiRevenue: 52,
+                rdRate: 22.3,
+                cloudGrowth: 0,
+                summary: {
+                    business: 'AI芯片市场挑战者，MI300系列GPU对标H100，ROCm生态逐步完善，数据中心业务+80% YoY，抢占NVIDIA溢出需求。',
+                    valuation: 'P/E 45x高估值反映AI预期，但MI300出货低于预期，市场份额仍小，估值隐含高风险高回报。',
+                    technical: 'RSI 64偏强，MACD金叉，价格位于MA50上方+6%，技术面偏强，但波动性大。',
+                    outlook: 'MI300出货2024年目标$4B+，云厂商（Microsoft/Oracle）采用验证产品力，但ROCm生态成熟度仍落后CUDA，市场份额提升需时间。'
+                }
+            }
+        ];
+
+        // 非传统选股（精简版，完整数据同上）
+        const unconventionalPicks = [
+            {
+                rank: 1,
+                ticker: 'VRT',
+                name: 'Vertiv Holdings',
+                exchange: 'NYSE',
+                category: '数据中心基础设施',
+                aiRevenue: 45,
+                rdRate: 8.5,
+                cloudGrowth: 25,
+                summary: {
+                    business: '全球数据中心关键电力与冷却设备领导者，AI芯片功耗激增推动液冷系统需求爆发，占据高端液冷市场60%+份额。',
+                    valuation: '当前P/E 28.5x，低于同业平均，PEG 1.9合理偏低，考虑到AI驱动的订单增长（积压$6.8B），估值具有吸引力。',
+                    technical: 'RSI 58中性区间，MACD金叉，价格位于MA50上方+3.2%，技术面健康，支撑$78，阻力$92。',
+                    outlook: 'AI数据中心液冷系统2024-2026年CAGR预计35%+，与Microsoft、Meta多年框架协议确保收入可见性，毛利率改善趋势持续。'
+                },
+                daysListed: 0
+            },
+            {
+                rank: 2,
+                ticker: 'ANET',
+                name: 'Arista Networks',
+                exchange: 'NYSE',
+                category: 'AI网络设备',
+                aiRevenue: 65,
+                rdRate: 16.4,
+                cloudGrowth: 45,
+                summary: {
+                    business: 'AI训练集群后端网络隐形冠军，800G/1.6T以太网技术领先，占据AI数据中心网络60%+市场份额，客户包括Meta、Microsoft等。',
+                    valuation: 'P/E 42.3x看似偏高，但考虑18%增长率和63%毛利率，PEG 2.3在高质量成长股中合理，净现金$5.8B提供安全边际。',
+                    technical: 'RSI 65偏强但未超买，MACD金叉，价格强势位于MA50上方+5.8%，趋势向上，短期支撑$245。',
+                    outlook: 'Meta AI基础设施投资预计带来$3-4B订单，Azure AI扩张持续，400G/800G升级周期刚开始，2024-2026年维持高速增长确定性强。'
+                },
+                daysListed: 0
+            },
+            {
+                rank: 3,
+                ticker: 'SMCI',
+                name: 'Super Micro Computer',
+                exchange: 'NASDAQ',
+                category: 'AI服务器',
+                aiRevenue: 72,
+                rdRate: 11.2,
+                cloudGrowth: 143,
+                summary: {
+                    business: 'AI优化服务器快速交付专家，NVIDIA MGX平台首批合作伙伴，提供H100/H200液冷服务器解决方案，交付速度业界最快。',
+                    valuation: 'P/E 35.2x，PEG仅0.35极低（基于100%增长），但高增长可持续性存疑，估值看似便宜实则隐含高风险。',
+                    technical: 'RSI 72超买区域，MACD金叉但动能减弱，价格大幅高于MA50（+12.5%），短期技术面过热，需警惕回调风险。',
+                    outlook: 'FY2024营收预计$20B（+100% YoY），订单积压$4B+，但2026年后增速必然放缓，竞争加剧（Dell/HPE进入），高风险高回报型标的。'
+                },
+                daysListed: 0
+            },
+            {
+                rank: 4,
+                ticker: 'AZPN',
+                name: 'Aspen Technology',
+                exchange: 'NASDAQ',
+                category: '工业AI软件',
+                aiRevenue: 85,
+                rdRate: 28.5,
+                cloudGrowth: 12,
+                summary: {
+                    business: '化工/能源行业AI流程优化软件领导者，AI原生公司（使用AI>20年）现叠加生成式AI，订阅模式ARR $1.2B，95%+续费率。',
+                    valuation: 'P/E 50.1x偏高，但订阅收入模式下应看EV/ARR（11.7x）较合理，Rule of 40达到48显示高质量SaaS特征。',
+                    technical: 'RSI 48中性偏弱，MACD死叉转弱，价格位于MA50下方-2.1%，技术面短期偏弱，支撑$205关键。',
+                    outlook: '能源转型+碳税政策推动工业AI优化需求增长，客户ROI明确（<2年），订阅转型成功后估值有望重估，中长期看好。'
+                },
+                daysListed: 0
+            },
+            {
+                rank: 5,
+                ticker: 'PLTR',
+                name: 'Palantir Technologies',
+                exchange: 'NYSE',
+                category: '企业AI平台',
+                aiRevenue: 68,
+                rdRate: 31.2,
+                cloudGrowth: 54,
+                summary: {
+                    business: '政府+企业AI解决方案平台，AIP产品推动商业化加速，Q3商业收入+54%，政府收入+40%，净留存率>110%显示强劲扩张能力。',
+                    valuation: 'P/E 95.6x极高估值，即使考虑27%增长率PEG仍达3.5，适合高风险偏好投资者，零债务和转盈利是亮点。',
+                    technical: 'RSI 71超买，MACD金叉，价格远高于MA50（+18.3%），技术面过热，动量强劲但存在短期调整压力。',
+                    outlook: 'AIP平台客户快速增加，政府AI合同持续扩张，商业化加速验证平台价值，但估值过高需谨慎，适合长期持有但需接受波动。'
+                },
+                daysListed: 0
+            }
+        ];
+
+        // 生成市场指数和AI指标
+        function generateMetrics() {
+            const marketIndices = [
+                { label: 'NASDAQ', value: '18,259', change: '+0.85%', positive: true },
+                { label: 'S&P 500', value: '5,815', change: '+0.42%', positive: true },
+                { label: 'VIX', value: '14.2', change: '-2.1', positive: false },
+                { label: 'SOX (Semiconductors)', value: '4,925', change: '+1.8%', positive: true },
+                { label: 'AI ETF (BOTZ)', value: '$32.45', change: '+1.2%', positive: true }
+            ];
+
+            const flow = (Math.random() * 2000 - 500).toFixed(0);
+            const aiMetrics = [
+                { 
+                    label: 'AI ETF资金流 (30D)', 
+                    value: `${parseFloat(flow) > 0 ? '+' : ''}$${flow}M`,
+                    change: parseFloat(flow) > 0 ? '机构净流入' : '机构净流出',
+                    positive: parseFloat(flow) > 0
+                },
+                { 
+                    label: 'AI芯片出货量 (QoQ)', 
+                    value: (Math.random() * 10 + 12).toFixed(1) + 'M',
+                    change: '+' + (Math.random() * 20 + 5).toFixed(1) + '%',
+                    positive: true
+                },
+                { 
+                    label: '企业AI采用率', 
+                    value: (Math.random() * 5 + 52).toFixed(1) + '%',
+                    change: 'YoY +' + (Math.random() * 3 + 2).toFixed(1) + '%',
+                    positive: true
+                },
+                { 
+                    label: 'AI板块平均P/E', 
+                    value: (Math.random() * 10 + 35).toFixed(1) + 'x',
+                    change: 'vs 科技板块均值',
+                    positive: null
+                },
+                { 
+                    label: '数据中心CapEx (YoY)', 
+                    value: '$' + (Math.random() * 50 + 150).toFixed(0) + 'B',
+                    change: '+' + (Math.random() * 30 + 20).toFixed(0) + '%',
+                    positive: true
+                }
+            ];
+
+            document.getElementById('marketIndices').innerHTML = marketIndices.map(m => `
+                <div class="index-card">
+                    <div class="index-label">${m.label}</div>
+                    <div class="index-value">${m.value}</div>
+                    <div class="index-change ${m.positive ? 'positive' : 'negative'}">
+                        ${m.positive ? '↗' : '↘'} ${m.change}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('aiMetrics').innerHTML = aiMetrics.map(m => `
+                <div class="index-card">
+                    <div class="index-label">${m.label}</div>
+                    <div class="index-value">${m.value}</div>
+                    <div class="index-change ${m.positive === null ? '' : (m.positive ? 'positive' : 'negative')}">
+                        ${m.positive === true ? '↗' : m.positive === false ? '↘' : '•'} ${m.change}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 生成股票完整卡片
+        function generateStockCard(stock, index, showRank = false) {
+            const price = (Math.random() * 400 + 100).toFixed(2);
+            const change = (Math.random() - 0.5) * 4;
+            const isPositive = change > 0;
+            
+            // 生成技术指标
+            const rsi = Math.random() * 100;
+            const macdSignal = Math.random() > 0.5;
+            const ma50Diff = (Math.random() - 0.5) * 20;
+
+            return `
+                <div class="stock-full-card">
+                    ${showRank ? `<div class="pick-rank">#${stock.rank}</div>` : ''}
+                    
+                    <div class="stock-card-header">
+                        <div class="stock-info">
+                            <h3>${stock.ticker}</h3>
+                            <div class="stock-company">${stock.name}</div>
+                            ${stock.category ? `<span class="pick-category">${stock.category}</span>` : ''}
+                            ${stock.daysListed !== undefined ? `<span class="pick-days">上榜 ${stock.daysListed} 天</span>` : ''}
+                        </div>
+                        <div class="stock-price-section">
+                            <div class="stock-price">$${price}</div>
+                            <div class="stock-change-badge ${isPositive ? 'positive' : 'negative'}">
+                                ${isPositive ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stock-card-body">
+                        <!-- Financial Metrics -->
+                        <div class="financial-metrics">
+                            <div class="metric-item">
+                                <div class="metric-item-label">AI营收占比</div>
+                                <div class="metric-item-value">${stock.aiRevenue}%</div>
+                                <div class="metric-item-trend">${stock.aiRevenue > 40 ? '高依赖' : '多元化'}</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item-label">研发费用率</div>
+                                <div class="metric-item-value">${stock.rdRate}%</div>
+                                <div class="metric-item-trend">${stock.rdRate > 18 ? '高投入' : '标准水平'}</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item-label">云/DC增长</div>
+                                <div class="metric-item-value">${stock.cloudGrowth > 0 ? '+' : ''}${stock.cloudGrowth}%</div>
+                                <div class="metric-item-trend">${stock.cloudGrowth > 50 ? '爆发式' : stock.cloudGrowth > 0 ? 'YoY增长' : 'N/A'}</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-item-label">P/E 比率</div>
+                                <div class="metric-item-value">${(Math.random() * 40 + 25).toFixed(1)}x</div>
+                                <div class="metric-item-trend">PEG: ${(Math.random() * 1.5 + 1).toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        <!-- Technical Indicators -->
+                        <div class="technical-indicators">
+                            <div class="tech-indicator">
+                                <div class="tech-label">RSI (14)</div>
+                                <div class="tech-value">${rsi.toFixed(0)}</div>
+                                <div class="tech-signal ${rsi > 70 ? 'bearish' : rsi < 30 ? 'bullish' : 'neutral'}">
+                                    ${rsi > 70 ? '超买' : rsi < 30 ? '超卖' : '中性'}
+                                </div>
+                            </div>
+                            <div class="tech-indicator">
+                                <div class="tech-label">MACD</div>
+                                <div class="tech-value">${macdSignal ? '金叉' : '死叉'}</div>
+                                <div class="tech-signal ${macdSignal ? 'bullish' : 'bearish'}">
+                                    ${macdSignal ? '看多' : '看空'}
+                                </div>
+                            </div>
+                            <div class="tech-indicator">
+                                <div class="tech-label">MA50 位置</div>
+                                <div class="tech-value">${ma50Diff > 0 ? '上方' : '下方'}</div>
+                                <div class="tech-signal ${ma50Diff > 0 ? 'bullish' : 'bearish'}">
+                                    ${ma50Diff > 0 ? '+' : ''}${ma50Diff.toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Executive Summary -->
+                        <div class="executive-summary">
+                            <div class="summary-title">Executive Summary</div>
+                            <div class="summary-item">
+                                <span class="summary-label">基本面与商业模式：</span>
+                                <span class="summary-text">${stock.summary.business}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">当前估值分析：</span>
+                                <span class="summary-text">${stock.summary.valuation}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">技术面分析：</span>
+                                <span class="summary-text">${stock.summary.technical}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">AI业务影响与展望：</span>
+                                <span class="summary-text">${stock.summary.outlook}</span>
+                            </div>
+                        </div>
+
+                        <!-- TradingView Chart -->
+                        <div class="tradingview-container">
+                            <div class="chart-placeholder" id="chart_${stock.ticker}_${index}"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染核心股票
+        function renderCoreStocks() {
+            const container = document.getElementById('coreStocksContainer');
+            container.innerHTML = coreStocks.map((stock, index) => 
+                generateStockCard(stock, index, false)
+            ).join('');
+
+            // 初始化图表
+            setTimeout(() => {
+                coreStocks.forEach((stock, index) => {
+                    initTradingViewChart(stock, `chart_${stock.ticker}_${index}`);
+                });
+            }, 500);
+        }
+
+        // 渲染非传统选股
+        function renderPicks() {
+            const container = document.getElementById('picksContainer');
+            container.innerHTML = unconventionalPicks.map((stock, index) => 
+                generateStockCard(stock, index, true)
+            ).join('');
+
+            setTimeout(() => {
+                unconventionalPicks.forEach((stock, index) => {
+                    initTradingViewChart(stock, `chart_${stock.ticker}_${index}`);
+                });
+            }, 500);
+        }
+
+        // 渲染深度分析
+        function renderAnalysis() {
+            const container = document.getElementById('analysisContainer');
+            const allStocks = [...coreStocks, ...unconventionalPicks];
+            
+            container.innerHTML = allStocks.map((stock, index) => 
+                generateStockCard(stock, index, false)
+            ).join('');
+
+            setTimeout(() => {
+                allStocks.forEach((stock, index) => {
+                    initTradingViewChart(stock, `chart_${stock.ticker}_${index}`);
+                });
+            }, 500);
+        }
+
+        // 初始化TradingView图表
+        function initTradingViewChart(stock, containerId) {
+            new TradingView.widget({
+                "width": "100%",
+                "height": 500,
+                "symbol": `${stock.exchange}:${stock.ticker}`,
+                "interval": "D",
+                "timezone": "America/New_York",
+                "theme": "light",
+                "style": "1",
+                "locale": "zh_CN",
+                "toolbar_bg": "#f5f5f0",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": false,
+                "studies": [
+                    "RSI@tv-basicstudies",
+                    "MASimple@tv-basicstudies",
+                    "MACD@tv-basicstudies",
+                    "Volume@tv-basicstudies"
+                ],
+                "container_id": containerId,
+                "withdateranges": true,
+                "save_image": false
+            });
+        }
+
+        // 数据持久化
+        function initializeData() {
+            const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (stored) {
+                const data = JSON.parse(stored);
+                const today = new Date().toDateString();
+                
+                if (data.lastUpdate !== today) {
+                    data.picks.forEach((pick, index) => {
+                        if (pick.ticker === unconventionalPicks[index].ticker) {
+                            unconventionalPicks[index].daysListed = (pick.daysListed || 0) + 1;
+                        } else {
+                            unconventionalPicks[index].daysListed = 1;
+                        }
+                    });
+                    saveData(today);
+                } else {
+                    data.picks.forEach((pick, index) => {
+                        if (unconventionalPicks[index] && pick.ticker === unconventionalPicks[index].ticker) {
+                            unconventionalPicks[index].daysListed = pick.daysListed || 1;
+                        }
+                    });
+                }
+            } else {
+                unconventionalPicks.forEach(pick => pick.daysListed = 1);
+                saveData(new Date().toDateString());
+            }
+        }
+
+        function saveData(date) {
+            const data = {
+                lastUpdate: date,
+                picks: unconventionalPicks.map(p => ({
+                    ticker: p.ticker,
+                    daysListed: p.daysListed
+                }))
+            };
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // 切换标签页
+        function switchMainTab(index) {
+            document.querySelectorAll('.main-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+            document.querySelectorAll('.main-tab-content').forEach((content, i) => {
+                content.classList.toggle('active', i === index);
+            });
+        }
+
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = 
+                `Last Updated: ${now.toLocaleString('zh-CN', { 
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                })}`;
+        }
+
+        // 刷新数据
+        function refreshData() {
+            generateMetrics();
+            renderCoreStocks();
+            renderPicks();
+            renderAnalysis();
+            updateTime();
+        }
+
+        // 初始化
+        window.addEventListener('load', () => {
+            initializeData();
+            generateMetrics();
+            renderCoreStocks();
+            renderPicks();
+            renderAnalysis();
+            updateTime();
+        });
+    </script>
+</body>
+</html>
